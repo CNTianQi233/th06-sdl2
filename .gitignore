@@ -8,3 +8,17 @@ scripts/dls
 scripts/prefix
 build.ninja
 __pycache__
+
+# AI assistant artifacts
+.claude/
+.codemap/
+SDL2_MIGRATION_PLAN.md
+build_errors.txt
+build_output.txt
+unique_errors.txt
+
+# IDE
+.vs/
+
+# SDL2 build output
+build_sdl2/
