@@ -9,7 +9,7 @@ scripts/prefix
 build.ninja
 __pycache__
 
-# AI assistant artifacts
+# Temp files
 .claude/
 .codemap/
 SDL2_MIGRATION_PLAN.md
