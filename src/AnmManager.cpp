@@ -424,10 +424,10 @@ ZunResult AnmManager::DrawInner(AnmVm *vm, i32 param_3)
 {
     if (param_3 != 0)
     {
-        f32 x0 = roundf(g_PrimitivesToDrawVertexBuf[0].position.x) - 0.5f;
-        f32 x1 = roundf(g_PrimitivesToDrawVertexBuf[1].position.x) - 0.5f;
-        f32 y0 = roundf(g_PrimitivesToDrawVertexBuf[0].position.y) - 0.5f;
-        f32 y2 = roundf(g_PrimitivesToDrawVertexBuf[2].position.y) - 0.5f;
+        f32 x0 = roundf(g_PrimitivesToDrawVertexBuf[0].position.x);
+        f32 x1 = roundf(g_PrimitivesToDrawVertexBuf[1].position.x);
+        f32 y0 = roundf(g_PrimitivesToDrawVertexBuf[0].position.y);
+        f32 y2 = roundf(g_PrimitivesToDrawVertexBuf[2].position.y);
         g_PrimitivesToDrawVertexBuf[2].position.y = y2;
         g_PrimitivesToDrawVertexBuf[3].position.y = y2;
         g_PrimitivesToDrawVertexBuf[0].position.y = y0;
@@ -580,13 +580,13 @@ ZunResult AnmManager::Draw(AnmVm *vm)
     yOffset = rintf(vm->pos.y);
     spriteXCenter = rintf((vm->sprite->widthPx * vm->scaleX) / 2.0f);
     spriteYCenter = rintf((vm->sprite->heightPx * vm->scaleY) / 2.0f);
-    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[0], -spriteXCenter - 0.5f, -spriteYCenter - 0.5f, zSine,
+    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[0], -spriteXCenter, -spriteYCenter, zSine,
                             zCosine, xOffset, yOffset);
-    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[1], spriteXCenter - 0.5f, -spriteYCenter - 0.5f, zSine,
+    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[1], spriteXCenter, -spriteYCenter, zSine,
                             zCosine, xOffset, yOffset);
-    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[2], -spriteXCenter - 0.5f, spriteYCenter - 0.5f, zSine,
+    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[2], -spriteXCenter, spriteYCenter, zSine,
                             zCosine, xOffset, yOffset);
-    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[3], spriteXCenter - 0.5f, spriteYCenter - 0.5f, zSine, zCosine,
+    this->TranslateRotation(&g_PrimitivesToDrawVertexBuf[3], spriteXCenter, spriteYCenter, zSine, zCosine,
                             xOffset, yOffset);
     g_PrimitivesToDrawVertexBuf[0].position.z = g_PrimitivesToDrawVertexBuf[1].position.z =
         g_PrimitivesToDrawVertexBuf[2].position.z = g_PrimitivesToDrawVertexBuf[3].position.z = vm->pos.z;
@@ -782,8 +782,8 @@ ZunResult AnmManager::Draw2(AnmVm *vm)
     }
 
     worldTransformMatrix = vm->matrix;
-    worldTransformMatrix.m[3][0] = rintf(vm->pos.x) - 0.5f;
-    worldTransformMatrix.m[3][1] = -rintf(vm->pos.y) + 0.5f;
+    worldTransformMatrix.m[3][0] = rintf(vm->pos.x);
+    worldTransformMatrix.m[3][1] = -rintf(vm->pos.y);
     if ((vm->flags.anchor & AnmVmAnchor_Left) != 0)
     {
         worldTransformMatrix.m[3][0] += (vm->sprite->widthPx * vm->scaleX) / 2.0f;

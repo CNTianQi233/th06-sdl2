@@ -19,6 +19,7 @@
 #include "i18n.hpp"
 #include "inttypes.hpp"
 #include "utils.hpp"
+#include "sdl2_renderer.hpp"
 #include <stdio.h>
 #include <string.h>
 #include <SDL.h>
@@ -288,10 +289,13 @@ ZunResult Supervisor::AddedCallback(Supervisor *s)
     }
     g_AnmManager->LoadSurface(0, "data/title/th06logo.jpg");
     g_AnmManager->CopySurfaceToBackBuffer(0, 0, 0, 0, 0);
-    SDL_GL_SwapWindow((SDL_Window *)g_Supervisor.hwndGameWindow);
+    g_Renderer.EndFrame();
 
+    g_Renderer.BeginFrame();
     g_AnmManager->CopySurfaceToBackBuffer(0, 0, 0, 0, 0);
-    SDL_GL_SwapWindow((SDL_Window *)g_Supervisor.hwndGameWindow);
+    g_Renderer.EndFrame();
+
+    g_Renderer.BeginFrame();
 
     g_AnmManager->ReleaseSurface(0);
 

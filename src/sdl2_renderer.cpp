@@ -8,6 +8,54 @@
 #include <cstring>
 #include <vector>
 
+// FBO extension function pointers (loaded at runtime)
+typedef void (APIENTRY *PFNGLGENFRAMEBUFFERSEXTPROC)(GLsizei, GLuint*);
+typedef void (APIENTRY *PFNGLDELETEFRAMEBUFFERSEXTPROC)(GLsizei, const GLuint*);
+typedef void (APIENTRY *PFNGLBINDFRAMEBUFFEREXTPROC)(GLenum, GLuint);
+typedef void (APIENTRY *PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)(GLenum, GLenum, GLenum, GLuint, GLint);
+typedef void (APIENTRY *PFNGLGENRENDERBUFFERSEXTPROC)(GLsizei, GLuint*);
+typedef void (APIENTRY *PFNGLDELETERENDERBUFFERSEXTPROC)(GLsizei, const GLuint*);
+typedef void (APIENTRY *PFNGLBINDRENDERBUFFEREXTPROC)(GLenum, GLuint);
+typedef void (APIENTRY *PFNGLRENDERBUFFERSTORAGEEXTPROC)(GLenum, GLenum, GLsizei, GLsizei);
+typedef void (APIENTRY *PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)(GLenum, GLenum, GLenum, GLuint);
+typedef GLenum (APIENTRY *PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC)(GLenum);
+
+static PFNGLGENFRAMEBUFFERSEXTPROC glGenFramebuffersEXT_ = NULL;
+static PFNGLDELETEFRAMEBUFFERSEXTPROC glDeleteFramebuffersEXT_ = NULL;
+static PFNGLBINDFRAMEBUFFEREXTPROC glBindFramebufferEXT_ = NULL;
+static PFNGLFRAMEBUFFERTEXTURE2DEXTPROC glFramebufferTexture2DEXT_ = NULL;
+static PFNGLGENRENDERBUFFERSEXTPROC glGenRenderbuffersEXT_ = NULL;
+static PFNGLDELETERENDERBUFFERSEXTPROC glDeleteRenderbuffersEXT_ = NULL;
+static PFNGLBINDRENDERBUFFEREXTPROC glBindRenderbufferEXT_ = NULL;
+static PFNGLRENDERBUFFERSTORAGEEXTPROC glRenderbufferStorageEXT_ = NULL;
+static PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT_ = NULL;
+static PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC glCheckFramebufferStatusEXT_ = NULL;
+
+#define GL_FRAMEBUFFER_EXT             0x8D40
+#define GL_RENDERBUFFER_EXT            0x8D41
+#define GL_COLOR_ATTACHMENT0_EXT       0x8CE0
+#define GL_DEPTH_ATTACHMENT_EXT        0x8D00
+#define GL_DEPTH_COMPONENT16           0x81A5
+#define GL_FRAMEBUFFER_COMPLETE_EXT    0x8CD5
+
+static bool LoadFBOExtensions()
+{
+    glGenFramebuffersEXT_ = (PFNGLGENFRAMEBUFFERSEXTPROC)SDL_GL_GetProcAddress("glGenFramebuffersEXT");
+    glDeleteFramebuffersEXT_ = (PFNGLDELETEFRAMEBUFFERSEXTPROC)SDL_GL_GetProcAddress("glDeleteFramebuffersEXT");
+    glBindFramebufferEXT_ = (PFNGLBINDFRAMEBUFFEREXTPROC)SDL_GL_GetProcAddress("glBindFramebufferEXT");
+    glFramebufferTexture2DEXT_ = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture2DEXT");
+    glGenRenderbuffersEXT_ = (PFNGLGENRENDERBUFFERSEXTPROC)SDL_GL_GetProcAddress("glGenRenderbuffersEXT");
+    glDeleteRenderbuffersEXT_ = (PFNGLDELETERENDERBUFFERSEXTPROC)SDL_GL_GetProcAddress("glDeleteRenderbuffersEXT");
+    glBindRenderbufferEXT_ = (PFNGLBINDRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glBindRenderbufferEXT");
+    glRenderbufferStorageEXT_ = (PFNGLRENDERBUFFERSTORAGEEXTPROC)SDL_GL_GetProcAddress("glRenderbufferStorageEXT");
+    glFramebufferRenderbufferEXT_ = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glFramebufferRenderbufferEXT");
+    glCheckFramebufferStatusEXT_ = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC)SDL_GL_GetProcAddress("glCheckFramebufferStatusEXT");
+
+    return glGenFramebuffersEXT_ && glBindFramebufferEXT_ && glFramebufferTexture2DEXT_ &&
+           glGenRenderbuffersEXT_ && glBindRenderbufferEXT_ && glRenderbufferStorageEXT_ &&
+           glFramebufferRenderbufferEXT_ && glCheckFramebufferStatusEXT_;
+}
+
 namespace th06
 {
 
@@ -74,6 +122,12 @@ void SDL2Renderer::Init(SDL_Window *win, SDL_GLContext ctx, i32 w, i32 h)
     this->fogStart = 1000.0f;
     this->fogEnd = 5000.0f;
 
+    // Get actual window/screen size for fullscreen scaling
+    i32 drawW, drawH;
+    SDL_GL_GetDrawableSize(win, &drawW, &drawH);
+    this->realScreenWidth = drawW;
+    this->realScreenHeight = drawH;
+
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_2D);
@@ -95,7 +149,58 @@ void SDL2Renderer::Init(SDL_Window *win, SDL_GLContext ctx, i32 w, i32 h)
 
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
+    // Create FBO for render-to-texture if screen size differs from game size
+    this->fbo = 0;
+    this->fboColorTex = 0;
+    this->fboDepthRb = 0;
+    if (drawW != w || drawH != h)
+    {
+        if (LoadFBOExtensions())
+        {
+            // Color texture
+            glGenTextures(1, &this->fboColorTex);
+            glBindTexture(GL_TEXTURE_2D, this->fboColorTex);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+            // Depth renderbuffer
+            glGenRenderbuffersEXT_(1, &this->fboDepthRb);
+            glBindRenderbufferEXT_(GL_RENDERBUFFER_EXT, this->fboDepthRb);
+            glRenderbufferStorageEXT_(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16, w, h);
+
+            // FBO
+            glGenFramebuffersEXT_(1, &this->fbo);
+            glBindFramebufferEXT_(GL_FRAMEBUFFER_EXT, this->fbo);
+            glFramebufferTexture2DEXT_(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, this->fboColorTex, 0);
+            glFramebufferRenderbufferEXT_(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, this->fboDepthRb);
+
+            GLenum status = glCheckFramebufferStatusEXT_(GL_FRAMEBUFFER_EXT);
+            if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
+            {
+                // FBO incomplete — fall back to direct rendering
+                glBindFramebufferEXT_(GL_FRAMEBUFFER_EXT, 0);
+                glDeleteTextures(1, &this->fboColorTex);
+                glDeleteRenderbuffersEXT_(1, &this->fboDepthRb);
+                glDeleteFramebuffersEXT_(1, &this->fbo);
+                this->fbo = 0;
+                this->fboColorTex = 0;
+                this->fboDepthRb = 0;
+            }
+            else
+            {
+                glBindFramebufferEXT_(GL_FRAMEBUFFER_EXT, 0);
+            }
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+    }
+
     SetViewport(0, 0, w, h);
+
+    // Bind FBO for the first frame
+    BeginFrame();
 }
 
 void SDL2Renderer::BeginScene()
@@ -245,12 +350,12 @@ static void Begin2DDraw(SDL2Renderer *r)
     glGetIntegerv(GL_SCISSOR_BOX, g_PrevScissorBox);
 
     // Pre-transformed (XYZRHW) vertices are in full screen-space coordinates.
-    // Set both viewport AND scissor to full screen to match D3D's behavior
-    // where XYZRHW vertices bypass viewport transform. The D3D viewport clip
-    // was already applied via SetViewport's scissor rect; here we need the
-    // full screen to position vertices correctly in the ortho projection.
+    // Expand viewport to full screen so the ortho projection maps screen-space
+    // coordinates correctly. Keep scissor at the current viewport rect (set by
+    // SetViewport) because D3D8 clips XYZRHW vertices to the viewport rect.
+    // This prevents 2D sprites from gameplay managers from leaking into the
+    // HUD panel area.
     glViewport(0, 0, r->screenWidth, r->screenHeight);
-    glScissor(0, 0, r->screenWidth, r->screenHeight);
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
 
@@ -783,6 +888,131 @@ GLuint SDL2Renderer::LoadSurfaceFromFile(const u8 *data, i32 dataLen, D3DXIMAGE_
 void SDL2Renderer::CopySurfaceToScreen(GLuint surfaceTex, i32 texW, i32 texH, i32 dstX, i32 dstY)
 {
     CopySurfaceToScreen(surfaceTex, 0, 0, dstX, dstY, texW, texH, texW, texH);
+}
+
+void SDL2Renderer::BeginFrame()
+{
+    if (this->fbo != 0)
+    {
+        glBindFramebufferEXT_(GL_FRAMEBUFFER_EXT, this->fbo);
+        // Restore viewport/scissor to the values from the last SetViewport() call,
+        // not full screen. D3D8's Present() does not alter render state, and the
+        // game depends on CalcChain-set viewport (gameplay area 32,16,384,448)
+        // persisting into the next frame's DrawChain to clip Stage's 3D background.
+        glViewport(this->viewportX, this->screenHeight - this->viewportY - this->viewportH,
+                   this->viewportW, this->viewportH);
+        glScissor(this->viewportX, this->screenHeight - this->viewportY - this->viewportH,
+                  this->viewportW, this->viewportH);
+    }
+}
+
+void SDL2Renderer::EndFrame()
+{
+    if (this->fbo != 0)
+    {
+        // Unbind FBO — draw to the real screen
+        glBindFramebufferEXT_(GL_FRAMEBUFFER_EXT, 0);
+
+        i32 rw = this->realScreenWidth;
+        i32 rh = this->realScreenHeight;
+
+        // Clear actual screen to black (alpha=1 so DWM composites as fully opaque)
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glViewport(0, 0, rw, rh);
+        glScissor(0, 0, rw, rh);
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // Compute centered 4:3 letterbox/pillarbox
+        i32 scaledW, scaledH;
+        if (rw * this->screenHeight > rh * this->screenWidth)
+        {
+            scaledH = rh;
+            scaledW = rh * this->screenWidth / this->screenHeight;
+        }
+        else
+        {
+            scaledW = rw;
+            scaledH = rw * this->screenHeight / this->screenWidth;
+        }
+        i32 offsetX = (rw - scaledW) / 2;
+        i32 offsetY = (rh - scaledH) / 2;
+
+        glViewport(offsetX, offsetY, scaledW, scaledH);
+        glScissor(offsetX, offsetY, scaledW, scaledH);
+
+        // Draw FBO texture as fullscreen quad
+        // Block alpha writes so the default framebuffer keeps alpha=1 from the
+        // clear above — prevents DWM from compositing the window as transparent
+        // when the FBO has alpha=0 areas (fog/sky clear).
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
+        glDisable(GL_ALPHA_TEST);
+        glDisable(GL_BLEND);
+        glDisable(GL_FOG);
+        glDisable(GL_SCISSOR_TEST);
+
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glOrtho(0, 1, 0, 1, -1, 1);
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+        glMatrixMode(GL_TEXTURE);
+        glPushMatrix();
+        glLoadIdentity();
+
+        glEnable(GL_TEXTURE_2D);
+        glBindTexture(GL_TEXTURE_2D, this->fboColorTex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glColor4f(1, 1, 1, 1);
+        glBegin(GL_TRIANGLE_STRIP);
+        glTexCoord2f(0, 0); glVertex2f(0, 0);
+        glTexCoord2f(1, 0); glVertex2f(1, 0);
+        glTexCoord2f(0, 1); glVertex2f(0, 1);
+        glTexCoord2f(1, 1); glVertex2f(1, 1);
+        glEnd();
+
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
+        glMatrixMode(GL_TEXTURE);
+        glPopMatrix();
+
+        // Restore render state
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+        glEnable(GL_ALPHA_TEST);
+        glEnable(GL_BLEND);
+        glEnable(GL_SCISSOR_TEST);
+        if (this->fogEnabled)
+            glEnable(GL_FOG);
+
+        // Restore texture enable/binding to match currentTexture (mirrors SetTexture logic).
+        // The blit enabled GL_TEXTURE_2D; if the game had it disabled (currentTexture==0),
+        // we must disable it or the next SetTexture(0) early-outs without disabling.
+        if (this->currentTexture != 0)
+        {
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, this->currentTexture);
+        }
+        else
+        {
+            glDisable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
+        // Restore matrix mode — the push/pop sequence above leaves it as GL_TEXTURE,
+        // but the game expects GL_MODELVIEW between frames.
+        glMatrixMode(GL_MODELVIEW);
+    }
+
+    SDL_GL_SwapWindow(this->window);
 }
 
 } // namespace th06

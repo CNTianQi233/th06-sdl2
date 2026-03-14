@@ -155,30 +155,7 @@ void GameWindow::Present()
 {
     i32 unused;
 
-    if (g_GameWindow.screenWidth != 0)
-    {
-        i32 scaledW, scaledH;
-        if (g_GameWindow.screenWidth * GAME_WINDOW_HEIGHT > g_GameWindow.screenHeight * GAME_WINDOW_WIDTH)
-        {
-            scaledH = g_GameWindow.screenHeight;
-            scaledW = g_GameWindow.screenHeight * GAME_WINDOW_WIDTH / GAME_WINDOW_HEIGHT;
-        }
-        else
-        {
-            scaledW = g_GameWindow.screenWidth;
-            scaledH = g_GameWindow.screenWidth * GAME_WINDOW_HEIGHT / GAME_WINDOW_WIDTH;
-        }
-        i32 offsetX = (g_GameWindow.screenWidth - scaledW) / 2;
-        i32 offsetY = (g_GameWindow.screenHeight - scaledH) / 2;
-        glViewport(offsetX, offsetY, scaledW, scaledH);
-    }
-
-    SDL_GL_SwapWindow(g_GameWindow.sdlWindow);
-
-    if (g_GameWindow.screenWidth != 0)
-    {
-        glViewport(0, 0, GAME_WINDOW_WIDTH, GAME_WINDOW_HEIGHT);
-    }
+    g_Renderer.EndFrame();
 
     if (g_GameWindow.screenWidth != 0)
     {
@@ -199,6 +176,9 @@ void GameWindow::Present()
     {
         g_Supervisor.unk198--;
     }
+
+    // Begin next frame (binds FBO)
+    g_Renderer.BeginFrame();
     return;
 }
 

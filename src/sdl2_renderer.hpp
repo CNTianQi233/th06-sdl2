@@ -75,6 +75,13 @@ struct SDL2Renderer
     f32 fogStart;
     f32 fogEnd;
 
+    // FBO for render-to-texture (fullscreen scaling)
+    GLuint fbo;
+    GLuint fboColorTex;
+    GLuint fboDepthRb;
+    i32 realScreenWidth;
+    i32 realScreenHeight;
+
     void Init(SDL_Window *win, SDL_GLContext ctx, i32 w, i32 h);
     void BeginScene();
     void EndScene();
@@ -121,6 +128,9 @@ struct SDL2Renderer
     void CopySurfaceRectToScreen(GLuint surfaceTex, i32 srcX, i32 srcY, i32 srcW, i32 srcH,
                                  i32 dstX, i32 dstY, i32 texW, i32 texH);
     void TakeScreenshot(GLuint dstTex, i32 left, i32 top, i32 width, i32 height);
+
+    void BeginFrame();
+    void EndFrame();
 };
 
 extern SDL2Renderer g_Renderer;
