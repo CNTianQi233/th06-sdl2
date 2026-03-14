@@ -4,12 +4,15 @@
 
 #include "AnmManager.hpp"
 #include "Chain.hpp"
+#include "Controller.hpp"
 #include "FileSystem.hpp"
 #include "GameErrorContext.hpp"
 #include "GameWindow.hpp"
+#include "MidiOutput.hpp"
 #include "SoundPlayer.hpp"
 #include "Stage.hpp"
 #include "Supervisor.hpp"
+#include "TextHelper.hpp"
 #include "ZunResult.hpp"
 #include "i18n.hpp"
 #include "utils.hpp"
@@ -76,12 +79,6 @@ restart:
     }
 
 stop:
-    // Manually invoke Supervisor cleanup before chain release, because
-    // g_Chain.Release() only deletes heap-allocated chain elements without
-    // calling their deletedCallback.  This ensures MidiOutput, PBG3 archives,
-    // text buffers and the SDL controller are properly released.
-    Supervisor::DeletedCallback(&g_Supervisor);
-
     g_Chain.Release();
     g_SoundPlayer.Release();
 
@@ -93,6 +90,21 @@ stop:
 
     if (renderResult == 2)
     {
+        // Clean up resources that leak across restart cycles.
+        // We cannot call Supervisor::DeletedCallback() here because
+        // ReleasePbg3() has a built-in double-free (calls Release() then
+        // delete which calls Release() again) that crashes on modern heaps.
+        // PBG3 archives are re-released internally by LoadPbg3() on reload,
+        // so only these three resources actually leak:
+        if (g_Supervisor.midiOutput != NULL)
+        {
+            g_Supervisor.midiOutput->StopPlayback();
+            delete g_Supervisor.midiOutput;
+            g_Supervisor.midiOutput = NULL;
+        }
+        TextHelper::ReleaseTextBuffer();
+        Controller::CloseSDLController();
+
         g_GameErrorContext.ResetContext();
 
         GameErrorContext::Log(&g_GameErrorContext, TH_ERR_OPTION_CHANGED_RESTART);
