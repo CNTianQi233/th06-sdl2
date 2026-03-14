@@ -23,6 +23,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <SDL.h>
+#ifndef _WIN32
+#include <glob.h>
+#endif
 
 namespace th06
 {
@@ -501,13 +504,52 @@ static const wchar_t *FindDatBySuffixW(const char *filename, wchar_t *outBuf, si
     FindClose(hFind);
     return outBuf;
 #else
-    // Linux: just convert the original filename to wchar_t directly
-    // (game data files use ASCII names, case-insensitive search not needed)
-    size_t fnLen = strlen(filename);
-    if (fnLen >= outBufLen)
+    // Linux: search current directory for a file ending with the suffix using glob.
+    // Use character classes [xX] for case-insensitivity since drvfs (WSL /mnt/c/) is case-sensitive.
+    size_t sfxLen = strlen(suffix);
+    char pattern[64];
+    size_t p = 0;
+    pattern[p++] = '*';
+    for (size_t i = 0; i < sfxLen && p + 5 < sizeof(pattern); i++)
+    {
+        char c = suffix[i];
+        if (c >= 'A' && c <= 'Z')
+        {
+            pattern[p++] = '[';
+            pattern[p++] = c;
+            pattern[p++] = c + 32;
+            pattern[p++] = ']';
+        }
+        else if (c >= 'a' && c <= 'z')
+        {
+            pattern[p++] = '[';
+            pattern[p++] = c - 32;
+            pattern[p++] = c;
+            pattern[p++] = ']';
+        }
+        else
+        {
+            pattern[p++] = c;
+        }
+    }
+    pattern[p] = '\0';
+
+    glob_t g;
+    if (glob(pattern, 0, NULL, &g) != 0 || g.gl_pathc == 0)
+    {
+        globfree(&g);
         return NULL;
-    for (size_t i = 0; i <= fnLen; i++)
-        outBuf[i] = (wchar_t)(unsigned char)filename[i];
+    }
+    const char *found = g.gl_pathv[0];
+    size_t nameLen = strlen(found);
+    if (nameLen >= outBufLen)
+    {
+        globfree(&g);
+        return NULL;
+    }
+    for (size_t i = 0; i <= nameLen; i++)
+        outBuf[i] = (wchar_t)(unsigned char)found[i];
+    globfree(&g);
     return outBuf;
 #endif
 }
