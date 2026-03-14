@@ -904,7 +904,15 @@ i32 ResultScreen::HandleReplaySaveKeyboard()
             g_SoundPlayer.PlaySoundByIdx(SOUND_SELECT, 0);
             this->replayNumber = this->cursor;
             this->frameTimer = 0;
+#ifdef _WIN32
             _strdate(this->defaultReplay.date);
+#else
+            {
+                time_t t = time(NULL);
+                struct tm *tm = localtime(&t);
+                strftime(this->defaultReplay.date, sizeof(this->defaultReplay.date), "%m/%d/%y", tm);
+            }
+#endif
             (this->defaultReplay).score = g_GameManager.score;
             if (*(i32 *)&this->replays[this->cursor].magic != *(i32 *)&"T6RP" ||
                 this->replays[this->cursor].version != GAME_VERSION)

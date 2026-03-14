@@ -464,7 +464,11 @@ static const wchar_t *FindDatBySuffixW(const char *filename, wchar_t *outBuf, si
         if (fnLen > sfxLen)
         {
             const char *tail = filename + fnLen - sfxLen;
+#ifdef _WIN32
             if (_stricmp(tail, kSuffixes[i]) == 0)
+#else
+            if (strcasecmp(tail, kSuffixes[i]) == 0)
+#endif
             {
                 suffix = kSuffixes[i];
                 break;
@@ -474,6 +478,7 @@ static const wchar_t *FindDatBySuffixW(const char *filename, wchar_t *outBuf, si
     if (suffix == NULL)
         return NULL;
 
+#ifdef _WIN32
     wchar_t pattern[32];
     size_t sfxLen = strlen(suffix);
     pattern[0] = L'*';
@@ -495,6 +500,16 @@ static const wchar_t *FindDatBySuffixW(const char *filename, wchar_t *outBuf, si
     wcscpy(outBuf, fd.cFileName);
     FindClose(hFind);
     return outBuf;
+#else
+    // Linux: just convert the original filename to wchar_t directly
+    // (game data files use ASCII names, case-insensitive search not needed)
+    size_t fnLen = strlen(filename);
+    if (fnLen >= outBufLen)
+        return NULL;
+    for (size_t i = 0; i <= fnLen; i++)
+        outBuf[i] = (wchar_t)(unsigned char)filename[i];
+    return outBuf;
+#endif
 }
 
 i32 Supervisor::LoadPbg3(i32 pbg3FileIdx, char *filename)

@@ -9,6 +9,11 @@
 #include "i18n.hpp"
 #include "utils.hpp"
 
+#ifndef _WIN32
+#include <fcntl.h>
+#include <unistd.h>
+#endif
+
 namespace th06
 {
 DIFFABLE_STATIC(HANDLE, g_ExclusiveMutex)
@@ -16,6 +21,7 @@ namespace utils
 {
 ZunResult CheckForRunningGameInstance(void)
 {
+#ifdef _WIN32
     g_ExclusiveMutex = CreateMutex(NULL, TRUE, TEXT("Touhou Koumakyou App"));
 
     if (g_ExclusiveMutex == NULL)
@@ -27,6 +33,22 @@ ZunResult CheckForRunningGameInstance(void)
         GameErrorContext::Fatal(&g_GameErrorContext, TH_ERR_ALREADY_RUNNING);
         return ZUN_ERROR;
     }
+#else
+    // On Linux, use a lock file for single-instance check
+    static int lockFd = -1;
+    lockFd = open("/tmp/th06.lock", O_CREAT | O_RDWR, 0666);
+    if (lockFd >= 0)
+    {
+        struct flock fl = {};
+        fl.l_type = F_WRLCK;
+        fl.l_whence = SEEK_SET;
+        if (fcntl(lockFd, F_SETLK, &fl) == -1)
+        {
+            GameErrorContext::Fatal(&g_GameErrorContext, TH_ERR_ALREADY_RUNNING);
+            return ZUN_ERROR;
+        }
+    }
+#endif
 
     return ZUN_SUCCESS;
 }

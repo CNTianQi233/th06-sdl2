@@ -390,6 +390,7 @@ typedef DWORD *LPDWORD;
 typedef int BOOL;
 typedef unsigned int UINT;
 typedef long LONG;
+typedef long HRESULT;
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
 typedef long LRESULT;

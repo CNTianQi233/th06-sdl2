@@ -15,7 +15,7 @@ i32 Pbg3Parser::OpenArchive(char *path)
     {
         return FALSE;
     }
-    this->fileSize = GetFileSize(this->handle, NULL);
+    this->fileSize = this->GetSize();
     return TRUE;
 }
 
@@ -27,7 +27,7 @@ i32 Pbg3Parser::OpenArchiveW(const wchar_t *path)
     {
         return FALSE;
     }
-    this->fileSize = GetFileSize(this->handle, NULL);
+    this->fileSize = this->GetSize();
     return TRUE;
 }
 
@@ -124,7 +124,7 @@ i32 Pbg3Parser::SeekToOffset(u32 fileOffset)
         return FALSE;
     }
 
-    if (FileAbstraction::Seek(fileOffset, FILE_BEGIN) == FALSE)
+    if (FileAbstraction::Seek(fileOffset, 0) == FALSE)
     {
         return FALSE;
     }

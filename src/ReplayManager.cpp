@@ -404,7 +404,15 @@ void ReplayManager::SaveReplay(char *replayPath, char *replayName)
                 replayCopy.slowdownRate3 = replayCopy.slowdownRate + 2.34f;
                 mgr->replayData->stageReplayData[g_GameManager.currentStage - 1]->score = g_GameManager.score;
                 strcpy(replayCopy.name, replayName);
+#ifdef _WIN32
                 _strdate(replayCopy.date);
+#else
+                {
+                    time_t t = time(NULL);
+                    struct tm *tm = localtime(&t);
+                    strftime(replayCopy.date, sizeof(replayCopy.date), "%m/%d/%y", tm);
+                }
+#endif
                 replayCopy.key = g_Rng.GetRandomU16InRange(128) + 64;
                 replayCopy.rngValue3 = g_Rng.GetRandomU16InRange(256);
                 replayCopy.rngValue1 = g_Rng.GetRandomU16InRange(256);

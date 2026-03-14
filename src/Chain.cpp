@@ -40,7 +40,11 @@ ChainElem::~ChainElem()
 
 Chain::Chain()
 {
+#ifdef _WIN32
     midiOutputDeviceCount = midiOutGetNumDevs();
+#else
+    midiOutputDeviceCount = 0;
+#endif
     unk = 0;
 }
 

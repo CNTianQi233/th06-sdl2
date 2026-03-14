@@ -4,6 +4,11 @@
 #include "inttypes.hpp"
 #include "sdl2_compat.hpp"
 
+#ifndef _WIN32
+#define INVALID_HANDLE_VALUE ((HANDLE)(long)-1)
+inline int GetFileTime(HANDLE, void*, void*, LPFILETIME) { return 0; }
+#endif
+
 namespace th06
 {
 class IFileAbstraction

@@ -69,7 +69,11 @@ void GameErrorContext::Flush()
 
         if (m_ShowMessageBox)
         {
+#ifdef _WIN32
             MessageBoxA(NULL, m_Buffer, "log", MB_ICONERROR);
+#else
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "log", m_Buffer, NULL);
+#endif
         }
 
         logFile = fopen("./log.txt", "wt");
