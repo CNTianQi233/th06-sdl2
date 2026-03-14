@@ -541,7 +541,8 @@ i32 ResultScreen::LinkScoreEx(Hscr *out, i32 difficulty, i32 character)
 
 void ResultScreen::FreeScore(i32 difficulty, i32 character)
 {
-    free(&this->scores[difficulty][character]);
+    FreeAllScores(&this->scores[difficulty][character]);
+    this->scores[difficulty][character].next = NULL;
 }
 
 #pragma function("strcpy")
