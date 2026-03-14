@@ -46,10 +46,11 @@ RenderResult GameWindow::Render()
                 viewport.Height = 480;
                 viewport.MinZ = 0.0;
                 viewport.MaxZ = 1.0;
-                g_Renderer.SetViewport(viewport.X, viewport.Y, viewport.Width, viewport.Height);
+                g_Renderer.SetViewport(viewport.X, viewport.Y, viewport.Width, viewport.Height, viewport.MinZ, viewport.MaxZ);
                 g_Renderer.Clear(g_Stage.skyFog.color, 1, 1);
                 g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y,
-                                       g_Supervisor.viewport.Width, g_Supervisor.viewport.Height);
+                                       g_Supervisor.viewport.Width, g_Supervisor.viewport.Height,
+                                       g_Supervisor.viewport.MinZ, g_Supervisor.viewport.MaxZ);
             }
             g_Renderer.BeginScene();
             g_Chain.RunDrawChain();

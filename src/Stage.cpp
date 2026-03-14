@@ -271,7 +271,8 @@ ChainCallbackResult Stage::OnDrawLowPrio(Stage *stage)
     g_Supervisor.viewport.MaxZ = 0.5;
     GameManager::SetupCameraStageBackground(0);
     g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y,
-                           g_Supervisor.viewport.Width, g_Supervisor.viewport.Height);
+                           g_Supervisor.viewport.Width, g_Supervisor.viewport.Height,
+                           g_Supervisor.viewport.MinZ, g_Supervisor.viewport.MaxZ);
     g_Renderer.SetFog(1, stage->skyFog.color, 1000.0f, 2000.0f);
     return CHAIN_CALLBACK_RESULT_CONTINUE;
 }

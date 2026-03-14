@@ -241,7 +241,7 @@ void AsciiManager::DrawStrings(void)
                 g_Supervisor.viewport.Y = g_GameManager.arcadeRegionTopLeftPos.y;
                 g_Supervisor.viewport.Width = g_GameManager.arcadeRegionSize.x;
                 g_Supervisor.viewport.Height = g_GameManager.arcadeRegionSize.y;
-                g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height);
+                g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height, g_Supervisor.viewport.MinZ, g_Supervisor.viewport.MaxZ);
             }
             else
             {
@@ -249,7 +249,7 @@ void AsciiManager::DrawStrings(void)
                 g_Supervisor.viewport.Y = 0;
                 g_Supervisor.viewport.Width = 640;
                 g_Supervisor.viewport.Height = 480;
-                g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height);
+                g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height, g_Supervisor.viewport.MinZ, g_Supervisor.viewport.MaxZ);
             }
         }
         while (*text != NULL)
@@ -599,7 +599,7 @@ void StageMenu::OnDrawGameMenu()
         g_Supervisor.viewport.Y = g_GameManager.arcadeRegionTopLeftPos.y;
         g_Supervisor.viewport.Width = g_GameManager.arcadeRegionSize.x;
         g_Supervisor.viewport.Height = g_GameManager.arcadeRegionSize.y;
-        g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height);
+        g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height, g_Supervisor.viewport.MinZ, g_Supervisor.viewport.MaxZ);
         if (g_Supervisor.lockableBackbuffer && this->curState != GAME_MENU_PAUSE_OPENING)
         {
             AnmVm menuBackground = this->menuBackground;
@@ -810,7 +810,7 @@ void StageMenu::OnDrawRetryMenu()
         g_Supervisor.viewport.Y = g_GameManager.arcadeRegionTopLeftPos.y;
         g_Supervisor.viewport.Width = g_GameManager.arcadeRegionSize.x;
         g_Supervisor.viewport.Height = g_GameManager.arcadeRegionSize.y;
-        g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height);
+        g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height, g_Supervisor.viewport.MinZ, g_Supervisor.viewport.MaxZ);
         if (g_Supervisor.lockableBackbuffer && (this->curState != RETRY_MENU_OPENING || this->numFrames > 2))
         {
             g_AnmManager->DrawNoRotation(&this->menuBackground);
@@ -849,7 +849,7 @@ void AsciiManager::DrawPopupsWithHwVertexProcessing()
     g_Supervisor.viewport.Y = g_GameManager.arcadeRegionTopLeftPos.y;
     g_Supervisor.viewport.Width = g_GameManager.arcadeRegionSize.x;
     g_Supervisor.viewport.Height = g_GameManager.arcadeRegionSize.y;
-    g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height);
+    g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height, g_Supervisor.viewport.MinZ, g_Supervisor.viewport.MaxZ);
 
     for (i = 0; i < ARRAY_SIZE_SIGNED(this->popups); i++, currentPopup++)
     {
@@ -901,7 +901,7 @@ void AsciiManager::DrawPopupsWithoutHwVertexProcessing()
     g_Supervisor.viewport.Y = g_GameManager.arcadeRegionTopLeftPos.y;
     g_Supervisor.viewport.Width = g_GameManager.arcadeRegionSize.x;
     g_Supervisor.viewport.Height = g_GameManager.arcadeRegionSize.y;
-    g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height);
+    g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y, g_Supervisor.viewport.Width, g_Supervisor.viewport.Height, g_Supervisor.viewport.MinZ, g_Supervisor.viewport.MaxZ);
 
     for (i = 0; i < ARRAY_SIZE_SIGNED(this->popups); i++, currentPopup++)
     {

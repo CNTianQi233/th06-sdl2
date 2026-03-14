@@ -86,7 +86,7 @@ struct SDL2Renderer
     void BeginScene();
     void EndScene();
     void Clear(D3DCOLOR color, i32 clearColor, i32 clearDepth);
-    void SetViewport(i32 x, i32 y, i32 w, i32 h);
+    void SetViewport(i32 x, i32 y, i32 w, i32 h, f32 minZ = 0.0f, f32 maxZ = 1.0f);
     void SetBlendMode(u8 mode);
     void SetColorOp(u8 colorOp);
     void SetTexture(GLuint tex);

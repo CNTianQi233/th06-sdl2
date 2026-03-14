@@ -168,7 +168,8 @@ ChainCallbackResult GameManager::OnUpdate(GameManager *gameManager)
     SetupCamera(0);
 
     g_Renderer.SetViewport(g_Supervisor.viewport.X, g_Supervisor.viewport.Y,
-                           g_Supervisor.viewport.Width, g_Supervisor.viewport.Height);
+                           g_Supervisor.viewport.Width, g_Supervisor.viewport.Height,
+                           g_Supervisor.viewport.MinZ, g_Supervisor.viewport.MaxZ);
     g_Renderer.Clear(g_Stage.skyFog.color, 0, 1);
 
     // Seems like gameManager->isInGameMenu was supposed to have 3 states, but all the times it ends up checking both

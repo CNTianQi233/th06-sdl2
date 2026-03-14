@@ -231,7 +231,7 @@ void SDL2Renderer::Clear(D3DCOLOR color, i32 clearColor, i32 clearDepth)
         glClear(mask);
 }
 
-void SDL2Renderer::SetViewport(i32 x, i32 y, i32 w, i32 h)
+void SDL2Renderer::SetViewport(i32 x, i32 y, i32 w, i32 h, f32 minZ, f32 maxZ)
 {
     this->viewportX = x;
     this->viewportY = y;
@@ -239,6 +239,7 @@ void SDL2Renderer::SetViewport(i32 x, i32 y, i32 w, i32 h)
     this->viewportH = h;
     glViewport(x, this->screenHeight - y - h, w, h);
     glScissor(x, this->screenHeight - y - h, w, h);
+    glDepthRange(minZ, maxZ);
 }
 
 void SDL2Renderer::SetBlendMode(u8 mode)
