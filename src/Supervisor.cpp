@@ -290,10 +290,12 @@ ZunResult Supervisor::AddedCallback(Supervisor *s)
     g_AnmManager->LoadSurface(0, "data/title/th06logo.jpg");
     g_AnmManager->CopySurfaceToBackBuffer(0, 0, 0, 0, 0);
     g_Renderer.EndFrame();
+    SDL_PumpEvents();
 
     g_Renderer.BeginFrame();
     g_AnmManager->CopySurfaceToBackBuffer(0, 0, 0, 0, 0);
     g_Renderer.EndFrame();
+    SDL_PumpEvents();
 
     g_Renderer.BeginFrame();
 

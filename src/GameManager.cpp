@@ -18,6 +18,7 @@
 
 #include "sdl2_compat.hpp"
 #include "sdl2_renderer.hpp"
+#include <SDL.h>
 
 namespace th06
 {
@@ -387,6 +388,7 @@ ZunResult GameManager::AddedCallback(GameManager *mgr)
     }
     g_Supervisor.LoadPbg3(CM_PBG3_INDEX, TH_CM_DAT_FILE);
     g_Supervisor.LoadPbg3(ST_PBG3_INDEX, TH_ST_DAT_FILE);
+    SDL_PumpEvents();
     if (g_GameManager.isInReplay == 1)
     {
         if (ReplayManager::RegisterChain(1, g_GameManager.replayFile) != ZUN_SUCCESS)
@@ -402,6 +404,7 @@ ZunResult GameManager::AddedCallback(GameManager *mgr)
     }
     g_Rng.generationCount = 0;
     mgr->randomSeed = g_Rng.seed;
+    SDL_PumpEvents();
     if (Stage::RegisterChain(mgr->currentStage) != ZUN_SUCCESS)
     {
         GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_STAGE);
@@ -413,6 +416,7 @@ ZunResult GameManager::AddedCallback(GameManager *mgr)
         GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_PLAYER);
         return ZUN_ERROR;
     }
+    SDL_PumpEvents();
     if (BulletManager::RegisterChain("data/etama.anm") != ZUN_SUCCESS)
     {
         GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_BULLETMANAGER);
@@ -424,6 +428,7 @@ ZunResult GameManager::AddedCallback(GameManager *mgr)
         GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_ENEMYMANAGER);
         return ZUN_ERROR;
     }
+    SDL_PumpEvents();
     if (g_EclManager.Load(g_EclFiles[mgr->currentStage]) != ZUN_SUCCESS)
     {
         GameErrorContext::Log(&g_GameErrorContext, TH_ERR_GAMEMANAGER_FAILED_TO_INITIALIZE_ECLMANAGER);

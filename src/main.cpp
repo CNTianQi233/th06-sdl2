@@ -76,6 +76,12 @@ restart:
     }
 
 stop:
+    // Manually invoke Supervisor cleanup before chain release, because
+    // g_Chain.Release() only deletes heap-allocated chain elements without
+    // calling their deletedCallback.  This ensures MidiOutput, PBG3 archives,
+    // text buffers and the SDL controller are properly released.
+    Supervisor::DeletedCallback(&g_Supervisor);
+
     g_Chain.Release();
     g_SoundPlayer.Release();
 

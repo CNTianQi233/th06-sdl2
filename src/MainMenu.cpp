@@ -1027,6 +1027,8 @@ ZunResult MainMenu::BeginStartup()
         while ((time - g_Supervisor.startupTimeBeforeMenuMusic >= 0) &&
                (3000 > time - g_Supervisor.startupTimeBeforeMenuMusic))
         {
+            SDL_PumpEvents();
+            SDL_Delay(10);
             time = SDL_GetTicks();
         }
         g_Supervisor.startupTimeBeforeMenuMusic = 0;
